@@ -153,11 +153,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Joycon.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="Utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\hidapi.h" />
     <ClInclude Include="Joycon.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

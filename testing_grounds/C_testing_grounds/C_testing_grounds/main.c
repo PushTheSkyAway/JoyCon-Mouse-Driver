@@ -38,6 +38,7 @@ int main()
 		delete_joycon(&joycons[i]);
 	}
 
+	free(devices);
 	res = hid_exit();
 
 	return 0;
