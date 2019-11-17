@@ -92,53 +92,32 @@ void send_subcommand(joycon_t* jc, int command, int subcommand, uint8_t* data, i
 	
 }
 
-int init_bt(joycon_t* jc) {
-
-	unsigned char buf[0x40];
-	memset(buf, 0, 0x40);
-
-	hid_set_nonblocking(jc->handle, 0);
-
-
-	printf("Enabling vibrations...\n");
-
-	buf[0x0] = 0x01;
-	send_subcommand(jc, 0x1, 0x48, buf, 1);
-	for (int i = 0; i < 0x40; i++) {
-		printf("%i ", buf[i]);
-	}
-	printf("\n");
-
-
-	// Enable IMU data
-	printf("Enabling IMU data...\n");
-	buf[0] = 0x01; // Enabled
-	send_subcommand(jc, 0x01, 0x40, buf, 1);
-	for (int i = 0; i < 0x40; i++) {
-		printf("%i ", buf[i]);
-	}
-	printf("\n");
-
-
-	// Set input report mode (to push at 60hz)
-	// x00	Active polling mode for IR camera data. Answers with more than 300 bytes ID 31 packet
-	// x01	Active polling mode
-	// x02	Active polling mode for IR camera data.Special IR mode or before configuring it ?
-	// x21	Unknown.An input report with this ID has pairing or mcu data or serial flash data or device info
-	// x23	MCU update input report ?
-	// 30	NPad standard mode. Pushes current state @60Hz. Default in SDK if arg is not in the list
-	// 31	NFC mode. Pushes large packets @60Hz
-	printf("Set input report mode to 0x30...\n");
-	buf[0] = 0x30;
-	send_subcommand(jc, 0x01, 0x03, buf, 1);
-	for(int i =0 ;i<0x40;i++){
-		printf("%i ", buf[i]);
-	}
-	printf("\n");
-
-}
-
 void set_lights(joycon_t* jc, uint8_t bytefield) {
 	uint8_t buff[1] = { bytefield };
 	send_subcommand(jc, 0x01, 0x30, buff, 1);
+}
+
+//basic position X = 2225, Y = 1835
+void get_analog_stick_position(joycon_t* jc, uint16_t* X, uint16_t* Y) {
+	uint8_t buff[32];
+	memset(buff, 0, 32);
+	
+	send_subcommand(jc, 0x01, 0x00, buff, 32);
+	
+	uint8_t* data = buff + 6;
+	 *Y = data[0] | ((data[1] & 0xF) << 8);
+	 *X = (data[1] >> 4) | (data[2] << 4);
+}
+
+uint8_t get_buttons_status(joycon_t* jc) {
+	uint8_t buff[32];
+	memset(buff, 0, 32);
+
+	send_subcommand(jc, 0x01, 0x00, buff, 32);
+
+	if ((buff[5] & 1) > 0) {
+		return 1;
+	}
+
+	return 0;
 }
