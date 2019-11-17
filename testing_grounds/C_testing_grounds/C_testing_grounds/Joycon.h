@@ -16,7 +16,7 @@
 typedef enum {
 	JC_LEFT,
 	JC_RIGHT
-} JC_type;
+} jc_type_t;
 
 
 /*	
@@ -29,18 +29,26 @@ typedef struct {
 
 	char name[32];
 	wchar_t *serial;
-	JC_type type;
+	jc_type_t type;
 	hid_device* handle;
+	uint8_t global_packet_number;
 
-} Joycon;
+} joycon_t;
 
 
 
 //Returns new Joycon struct
-Joycon make_joycon(const struct hid_device_info* dev);
+joycon_t make_joycon(const struct hid_device_info* dev);
 
 //Cleans up after using makeJoycon
-void delete_joycon(Joycon* jc);
+void delete_joycon(joycon_t* jc);
 
 
-void send_command(Joycon* jc, int command, uint8_t* data, int len);
+void send_command(joycon_t* jc, int command, uint8_t* data, int len);
+
+void send_subcommand(joycon_t* jc, int command, int subcommand,  uint8_t* data, int len);
+
+int init_bt(joycon_t jc);
+
+// b7 b6 b5 b4 <- lights flicker, b3 b2 b1 b0 <- lights on
+void set_lights(joycon_t* jc, uint8_t bytefield);
