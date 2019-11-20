@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="iocontroller.h" />
     <ClCompile Include="Joycon.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="Utils.c" />
