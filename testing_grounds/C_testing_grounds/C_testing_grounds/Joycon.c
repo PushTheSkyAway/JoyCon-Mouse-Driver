@@ -98,14 +98,16 @@ void set_lights(joycon_t* jc, uint8_t bytefield) {
 
 //basic position X = 2225, Y = 1835
 void get_analog_stick_position(joycon_t* jc, uint16_t* X, uint16_t* Y) {
-	uint8_t buff[32];
-	memset(buff, 0, 32);
+	uint8_t buff[362];
+	memset(buff, 0, 362);
 
-	send_subcommand(jc, 0x01, 0x00, buff, 32);
+	send_subcommand(jc, 0x01, 0x00, buff, 362);
 
-	uint8_t* data = buff + 6;
-	*Y = data[0] | ((data[1] & 0xF) << 8);
-	*X = (data[1] >> 4) | (data[2] << 4);
+	if (buff[0] == 0x21 || buff[0] == 0x30 || buff[0] == 0x31) {	//check the packet ID
+		uint8_t* data = buff + (jc->type == JC_LEFT ? 6 : 9);
+		*Y = data[0] | ((data[1] & 0xF) << 8);
+		*X = (data[1] >> 4) | (data[2] << 4);
+	}
 }
 
 //byte 1
@@ -129,10 +131,9 @@ uint8_t get_buttons_status(joycon_t* jc, buttons_info_t* btn_info_out) {
 	uint8_t buff[12];
 	memset(buff, 0, 12);
 
-
 	int res = hid_read_timeout(jc->handle, buff, 12, 10);
 
-	if (res) {
+	if (res && buff[0] == 0x3F) {	//check if packet is a status packet
 		btn_info_out->DOWN = (buff[1] & 1) != 0;
 		btn_info_out->RIGHT = (buff[1] & (1 << 1)) != 0;
 		btn_info_out->LEFT = (buff[1] & (1 << 2)) != 0;
@@ -148,4 +149,30 @@ uint8_t get_buttons_status(joycon_t* jc, buttons_info_t* btn_info_out) {
 
 		btn_info_out->STICK_POS = buff[3];
 	}
+}
+
+// WIP: dopisac obsluge reszty przyciskow
+uint8_t get_buttons_status_ext(joycon_t* jc, buttons_info_ext_t* btn_info_out)
+{
+	uint8_t buff[256];
+	memset(buff, 0, sizeof(buff));
+
+	send_subcommand(jc, 0x01, 0x00, buff, 256);
+
+	if (buff[0] == 0x21 || buff[0] == 0x30 || buff[0] == 0x31) {	//check the packet ID
+		uint8_t* data = buff + (jc->type == JC_LEFT ? 6 : 9);
+		btn_info_out->ANALOG_STICK_Y = data[0] | ((data[1] & 0xF) << 8);
+		btn_info_out->ANALOG_STICK_X = (data[1] >> 4) | (data[2] << 4);
+
+		btn_info_out->buttons_info.DOWN = (buff[3] & 1) != 0;
+		btn_info_out->buttons_info.RIGHT = (buff[3] & (1 << 1)) != 0;
+		btn_info_out->buttons_info.LEFT = (buff[3] & (1 << 2)) != 0;
+		btn_info_out->buttons_info.UP = (buff[3] & (1 << 3)) != 0;
+		btn_info_out->buttons_info.SL = (buff[3] & (1 << 4)) != 0;
+		btn_info_out->buttons_info.SR = (buff[3] & (1 << 5)) != 0;
+
+		return 0;
+	}
+
+	return 1;
 }

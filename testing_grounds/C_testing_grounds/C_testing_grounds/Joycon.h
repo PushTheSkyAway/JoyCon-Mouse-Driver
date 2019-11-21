@@ -13,7 +13,7 @@
 #define JOYCON_L_BT 0x2006
 #define JOYCON_R_BT 0x2007
 
-#define COMMAND_BUF_SIZE 64
+#define COMMAND_BUF_SIZE 512
 
 //Stick positions
 #define STICK_UP 0
@@ -65,6 +65,13 @@ typedef struct {
 	uint8_t STICK_POS;
 } buttons_info_t;
 
+//extends buttons_info_t with data about analog stick
+typedef struct {
+	buttons_info_t buttons_info;
+	uint16_t ANALOG_STICK_X;
+	uint16_t ANALOG_STICK_Y;
+} buttons_info_ext_t;
+
 
 
 //Returns new Joycon struct
@@ -80,6 +87,8 @@ void send_subcommand(joycon_t* jc, int command, int subcommand,  uint8_t* data, 
 // b7 b6 b5 b4 <- lights flicker, b3 b2 b1 b0 <- lights on
 void set_lights(joycon_t* jc, uint8_t bytefield);
 
-void get_analog_stick_position(joycon_t* jc, uint8_t* X, uint8_t* Y);
+void get_analog_stick_position(joycon_t* jc, uint16_t* X, uint16_t* Y);
 
 uint8_t get_buttons_status(joycon_t* jc, buttons_info_t* btn_info_out);
+
+uint8_t get_buttons_status_ext(joycon_t* jc, buttons_info_ext_t* btn_info_out);
