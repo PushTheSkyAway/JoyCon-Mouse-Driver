@@ -42,51 +42,86 @@ int main(int argc, char** argv)
 
 	int res = hid_init();
 
-	joycon_t joycons[2] = { NULL, NULL };
-	buttons_info_t buttons[2] = { NULL, NULL };
+	joycon_t joycons[4] = { NULL, NULL, NULL, NULL };
+	buttons_info_t buttons[4] = { NULL, NULL, NULL, NULL };
 	buttons[0].STICK_POS = STICK_NEUTRAL;
 	buttons[1].STICK_POS = STICK_NEUTRAL;
+	buttons[2].STICK_POS = STICK_NEUTRAL;
+	buttons[3].STICK_POS = STICK_NEUTRAL;
 
 	//Watek wyszukujacy nowe urzadzenia co 5s.
-	CreateThread(0, 0, find_joycon, (void*)joycons, 0, 0);
+
+	HANDLE discovery_thread = CreateThread(0, 0, find_joycon, (void*)joycons, 0, 0);
 
 	uint8_t v = 10;
 	bool isLdown = false;
 	bool isRdown = false;
 	for (;;) {
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 4; i++) {
 			if (joycons[i].handle != NULL) {
 				get_buttons_status(&joycons[i], &buttons[i]);
 
 				//ustawienia czulosci
 				if (buttons[i].SL) {
 					v = v != 0 ? v - 1 : 0;
+					button_log_press("SL");
 				}
 				if (buttons[i].SR) {
 					v = v != 255 ? v + 1 : 255;
+					button_log_press("SR");
 				}
 
 				//klikniecia
 				if (buttons[i].RIGHT) {
 					LeftDown();
 					isLdown = true;
+					button_log_press("RIGHT");
 				}
 				else {
 					if (isLdown) {
 						LeftUp();
 						isLdown = false;
+						button_log_release("RIGHT");
 					}
 				}
 
 				if (buttons[i].DOWN) {
 					RightDown();
 					isRdown = true;
+					button_log_press("DOWN");
 				}
 				else {
 					if (isRdown) {
 						RightUp();
 						isRdown = false;
+						button_log_release("DOWN");
 					}
+				}
+
+				if (buttons[i].UP) {
+					MiddleClick();
+					button_log_press("UP");
+				}
+
+				if (buttons[i].R_L) {
+					ScrollUp();
+					button_log_press("R/L");
+				}
+				if (buttons[i].ZR_ZL) {
+					ScrollDown();
+					button_log_press("ZR/ZL");
+				}
+
+				if (buttons[i].MINUS_PLUS) {
+					button_log_press("MINUS_PLUS");
+					TerminateThread(discovery_thread, 0);	//Pamiec moze byc niepoprawnie czyszczona, ale watek przez 5s w kazdej petli dzialania jest posprzatany, wiec moze sie cos zgubic, ale prawdopodobienstwo jest raczej male.
+					
+					for (int i = 0; i < 2; i++) {
+						delete_joycon(&joycons[i]);
+					}
+					res = hid_exit();
+					
+					ExitProcess(0);
 				}
 
 				//Ruch mysza, poki co jedynie 8 kierunkow, ale niedlugo bedzie analogowy

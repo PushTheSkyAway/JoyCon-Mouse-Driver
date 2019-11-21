@@ -12,6 +12,7 @@ DWORD find_joycon(void* joycons)
 		joycon_t* jc_arr = (joycon_t*)joycons;
 
 		struct hid_device_info* devices = hid_enumerate(JOYCON_VENDOR, 0x0);
+		struct hid_device_info* devices_head = devices;
 
 		int i = 0;
 
@@ -20,15 +21,16 @@ DWORD find_joycon(void* joycons)
 		while (devices != NULL) {
 			i++;
 			bool isNew = true;
+			
 
 			for (int j = 0; j < found_devices; j++) {
-				if (wcscmp(devices->serial_number, jc_arr[j].serial) == 0) {
+				if (devices->serial_number!= NULL && jc_arr[j].serial!=NULL && wcscmp(devices->serial_number, jc_arr[j].serial) == 0) {
 					isNew = false;
 				}
 			}
 
 			if (isNew) {
-				printf("\n[DISCOVERY] Found new device... \n------\n");
+				printf("\n[DISCOVERY] Found new device<%i>...  \n------\n", found_devices);
 				printf("Basic Joycon %i info:\n", i);
 
 				wprintf(L"Manufacturer: %s\n", devices->manufacturer_string);
@@ -43,12 +45,24 @@ DWORD find_joycon(void* joycons)
 			else if (devices->next == NULL) {
 				printf("[DISCOVERY] No new devices found.\n");
 			}
+			
 			devices = devices->next;
 		}
 
-		free(devices);
+
+		hid_free_enumeration(devices_head);
 		Sleep(5000);
 	}
 
 	return 0;
+}
+
+
+
+void button_log_press(const char* btn_name) {
+	printf("[CONTROL LOG] %s has been pressed.\n", btn_name);
+}
+
+void button_log_release(const char* btn_name) {
+	printf("[CONTROL LOG] %s has been released.\n", btn_name);
 }
