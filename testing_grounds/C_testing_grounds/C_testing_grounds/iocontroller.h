@@ -65,6 +65,7 @@ void MiddleClick() {
 	Input.type = INPUT_MOUSE;
 	Input.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
 	SendInput(1, &Input, sizeof(INPUT));
+	Sleep(5);
 
 	ZeroMemory(&Input, sizeof(INPUT));
 	Input.type = INPUT_MOUSE;
@@ -74,4 +75,22 @@ void MiddleClick() {
 
 void MoveCursor(int x, int y) {
 	SetCursorPos(x, y);
+}
+
+void ScrollUp() {
+	INPUT    Input = { 0 };
+
+	Input.type = INPUT_MOUSE;
+	Input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+	Input.mi.mouseData = WHEEL_DELTA/5;
+	SendInput(1, &Input, sizeof(INPUT));
+}
+
+void ScrollDown() {
+	INPUT    Input = { 0 };
+
+	Input.type = INPUT_MOUSE;
+	Input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+	Input.mi.mouseData = -WHEEL_DELTA/5;
+	SendInput(1, &Input, sizeof(INPUT));
 }
